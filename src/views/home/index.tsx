@@ -1533,7 +1533,7 @@ const GameSandbox: FC = () => {
               onClick={closeTutorial}
               className={`w-full mt-8 py-3 rounded-xl font-black text-sm tracking-wide uppercase shadow-lg transition-transform active:scale-95 ${darkMode ? "bg-emerald-500 text-white hover:bg-emerald-600" : "bg-stone-800 text-white hover:bg-stone-900"}`}
             >
-              Let's Play!
+              let&apos;s play
             </button>
           </div>
         </div>
