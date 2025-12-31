@@ -46,7 +46,7 @@ export const HomeView: FC = () => {
 
       {/* FOOTER – tiny version text */}
       <footer className="flex h-5 items-center justify-center border-t border-white/10 px-2 text-[9px] text-slate-500">
-        <span>Scrolly · v1.0</span>
+        <span>Scrolly · v0.2.0</span>
       </footer>
     </div>
   );
