@@ -409,7 +409,7 @@ const GameSandbox: FC = () => {
 
 
   // Power-ups
-  const [powerups, setPowerups] = React.useState(() => savedState?.powerups || { freeze: 2, reveal: 1 });
+  const [powerups, setPowerups] = React.useState(() => savedState?.powerups || { freeze: 2, reveal: 1, shuffleUsage: 0 });
   const [isFrozen, setIsFrozen] = React.useState(false);
 
 
@@ -639,7 +639,7 @@ const GameSandbox: FC = () => {
 
 
     return () => clearInterval(timer);
-  }, [status, showSettings, showStats, zenMode, showTutorial, gameMode, isFrozen, showSplash]);
+  }, [status, showSettings, showStats, showTutorial, gameMode, isFrozen, showSplash]);
 
 
   const clone2D = <T,>(arr: T[][]) => arr.map((row) => row.slice());
@@ -700,7 +700,7 @@ const GameSandbox: FC = () => {
     setEarnedStreakBonus(0);
     setSpeedRunCount(0);
     setSpeedRunStartTime(0);
-    setPowerups({ freeze: 2, reveal: 1 });
+    setPowerups({ freeze: 2, reveal: 1, shuffleUsage: 0 });
    
     setShowSettings(false);
   };
@@ -807,9 +807,11 @@ const GameSandbox: FC = () => {
     setEarnedStreakBonus(0);
 
     // Grant powerups occasionally
-    if ((stats.gamesWon + 1) % 3 === 0) {
-      setPowerups((p: any) => ({ ...p, freeze: p.freeze + 1 }));
-    }
+    setPowerups((p: any) => {
+      const next = { ...p, shuffleUsage: 0 };
+      if ((stats.gamesWon + 1) % 3 === 0) next.freeze = (next.freeze || 0) + 1;
+      return next;
+    });
 
 
     setStats((s: any) => {
@@ -930,6 +932,41 @@ const GameSandbox: FC = () => {
     }
   };
 
+  const activateShuffle = () => {
+    const usage = powerups.shuffleUsage || 0;
+    const cost = 100 + (usage * 100);
+
+    if (score >= cost && status === 'playing') {
+      setScore((s) => s - cost);
+      setPowerups((p: any) => ({ ...p, shuffleUsage: usage + 1 }));
+      
+      const maxVal = stats.gamesWon >= 4 ? 25 : 9;
+      const newCells = Array.from({ length: ROWS }, () =>
+        Array.from({ length: COLS }, () => Math.floor(Math.random() * maxVal) + 1)
+      );
+
+      const newRowTargets = Array(ROWS).fill(0);
+      const newColTargets = Array(COLS).fill(0);
+
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (solutionMask[r][c]) {
+            newRowTargets[r] += newCells[r][c];
+            newColTargets[c] += newCells[r][c];
+          }
+        }
+      }
+
+      setCells(newCells);
+      setRowTargets(newRowTargets);
+      setColTargets(newColTargets);
+      setPuzzle((p: any) => ({ ...p, grid: newCells, rowTargets: newRowTargets, colTargets: newColTargets }));
+
+      playSound("pop");
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 400);
+    }
+  };
 
 
   // -------------------------------------------------------
@@ -1005,7 +1042,7 @@ const GameSandbox: FC = () => {
       playSound("pop");
       setCombo((c) => {
         const newCombo = c + 1;
-        setScore((s) => s + 5 * newCombo);
+        setScore((s) => s + 2 * newCombo);
         return newCombo;
       });
     } else {
@@ -1212,6 +1249,7 @@ const GameSandbox: FC = () => {
             <button onClick={() => { 
               loadNewPuzzle("normal");
               setShowSplash(false); 
+              setShowTutorial(true);
               playSound("pop"); 
             }} className="group relative px-10 py-4 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full text-white text-xl font-black shadow-[0_10px_20px_-10px_rgba(245,158,11,0.5)] hover:shadow-[0_20px_30px_-10px_rgba(245,158,11,0.6)] hover:scale-110 transition-all duration-300 active:scale-95">
               <span className="relative z-10 flex items-center gap-2">PLAY NOW 🚀</span>
@@ -1593,7 +1631,7 @@ const GameSandbox: FC = () => {
 
       {/* POWER-UPS BAR */}
       {status === 'playing' && (
-        <div className="flex justify-center gap-4 py-2">
+        <div className="flex justify-between w-full px-5 py-2">
           <button onClick={activateFreeze} disabled={score < 100 || isFrozen} className={`flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold transition-all active:scale-95 ${score >= 100 ? (isFrozen ? "bg-blue-500 text-white ring-2 ring-blue-300" : "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/60 dark:text-blue-100") : "bg-stone-200 text-stone-400 dark:bg-slate-800 dark:text-slate-600"}`}>
             <span>❄️</span>
             <span>Freeze</span>
@@ -1604,6 +1642,16 @@ const GameSandbox: FC = () => {
             <span>Reveal</span>
             <span className="bg-black/10 dark:bg-white/10 px-1.5 rounded-md">-100</span>
           </button>
+          {(() => {
+            const shuffleCost = 100 + ((powerups.shuffleUsage || 0) * 100);
+            return (
+              <button onClick={activateShuffle} disabled={score < shuffleCost} className={`flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold transition-all active:scale-95 ${score >= shuffleCost ? "bg-orange-100 text-orange-800 hover:bg-orange-200 dark:bg-orange-900/60 dark:text-orange-100" : "bg-stone-200 text-stone-400 dark:bg-slate-800 dark:text-slate-600"}`}>
+                <span>🔀</span>
+                <span>Shuffle</span>
+                <span className="bg-black/10 dark:bg-white/10 px-1.5 rounded-md">-{shuffleCost}</span>
+              </button>
+            );
+          })()}
         </div>
       )}
 
