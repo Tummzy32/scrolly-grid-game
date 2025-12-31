@@ -156,10 +156,14 @@ const Confetti: FC<{ continuous?: boolean }> = ({ continuous }) => {
 
 
 const GameSandbox: FC = () => {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => { setMounted(true); }, []);
+
   // -------------------------------------------------------
   //  STATS & LEVEL PROGRESSION
   // -------------------------------------------------------
   const [stats, setStats] = React.useState(() => {
+    if (typeof window === 'undefined') return { gamesPlayed: 0, gamesWon: 0, totalScore: 0, bestStreak: 0, currentStreak: 0, totalTime: 0, fastestWin: 0, dailyStreak: 0, lastDailyWin: null, bestSpeedRun: 0 };
     const saved = localStorage.getItem("crossing-sum-stats");
     if (saved) {
       const parsed = JSON.parse(saved);
@@ -186,6 +190,7 @@ const GameSandbox: FC = () => {
 
   // NEW: Load saved game state if exists
   const [savedState] = React.useState(() => {
+    if (typeof window === 'undefined') return null;
     try {
       const saved = localStorage.getItem("crossing-sum-gamestate");
       return saved ? JSON.parse(saved) : null;
@@ -520,6 +525,7 @@ const GameSandbox: FC = () => {
 
   const [hintsUsed, setHintsUsed] = React.useState(() => savedState?.hintsUsed || 0);
   const [hardMode, setHardMode] = React.useState(() => {
+    if (typeof window === 'undefined') return false;
     const saved = localStorage.getItem("crossing-sum-hardmode");
     return saved ? JSON.parse(saved) : false;
   });
@@ -528,26 +534,32 @@ const GameSandbox: FC = () => {
   const [showSettings, setShowSettings] = React.useState(false);
   const [showStats, setShowStats] = React.useState(false);
   const [darkMode, setDarkMode] = React.useState(() => {
+    if (typeof window === 'undefined') return false;
     const saved = localStorage.getItem("crossing-sum-darkmode");
     return saved ? JSON.parse(saved) : false;
   });
   const [zenMode, setZenMode] = React.useState(() => {
+    if (typeof window === 'undefined') return false;
     const saved = localStorage.getItem("crossing-sum-zenmode");
     return saved ? JSON.parse(saved) : false;
   });
   const [colorblindMode, setColorblindMode] = React.useState(() => {
+    if (typeof window === 'undefined') return false;
     const saved = localStorage.getItem("crossing-sum-colorblindmode");
     return saved ? JSON.parse(saved) : false;
   });
   const [musicEnabled, setMusicEnabled] = React.useState(() => {
+    if (typeof window === 'undefined') return true;
     const saved = localStorage.getItem("crossing-sum-music-v2");
     return saved ? JSON.parse(saved) : true;
   });
   const [musicVolume, setMusicVolume] = React.useState(() => {
+    if (typeof window === 'undefined') return 0.3;
     const saved = localStorage.getItem("crossing-sum-music-volume");
     return saved ? parseFloat(saved) : 0.3;
   });
   const [showTutorial, setShowTutorial] = React.useState(() => {
+    if (typeof window === 'undefined') return true;
     return !localStorage.getItem("crossing-sum-tutorial-seen");
   });
 
@@ -1172,6 +1184,8 @@ const GameSandbox: FC = () => {
     });
   };
 
+
+  if (!mounted) return <div className="w-full h-full bg-slate-900" />;
 
   return (
     <div className={`w-full h-full flex flex-col font-sans relative transition-colors duration-300 animate-gradient-xy ${darkMode ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-200" : "bg-gradient-to-br from-[#fdfbf7] via-white to-[#f0f9ff] text-slate-800"}`}>
