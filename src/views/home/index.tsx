@@ -537,11 +537,6 @@ const GameSandbox: FC = () => {
     const saved = localStorage.getItem("crossing-sum-darkmode");
     return saved ? JSON.parse(saved) : false;
   });
-  const [zenMode, setZenMode] = React.useState(() => {
-    if (typeof window === 'undefined') return false;
-    const saved = localStorage.getItem("crossing-sum-zenmode");
-    return saved ? JSON.parse(saved) : false;
-  });
   const [colorblindMode, setColorblindMode] = React.useState(() => {
     if (typeof window === 'undefined') return false;
     const saved = localStorage.getItem("crossing-sum-colorblindmode");
@@ -563,7 +558,6 @@ const GameSandbox: FC = () => {
   });
 
   const [showSplash, setShowSplash] = React.useState(true);
-  const [splashLevel, setSplashLevel] = React.useState(stats.gamesWon + 1);
   const [showModeSelector, setShowModeSelector] = React.useState(false);
   const [showFooterModeSelector, setShowFooterModeSelector] = React.useState(false);
 
@@ -583,9 +577,6 @@ const GameSandbox: FC = () => {
   React.useEffect(() => {
     localStorage.setItem("crossing-sum-darkmode", JSON.stringify(darkMode));
   }, [darkMode]);
-  React.useEffect(() => {
-    localStorage.setItem("crossing-sum-zenmode", JSON.stringify(zenMode));
-  }, [zenMode]);
   React.useEffect(() => {
     localStorage.setItem("crossing-sum-colorblindmode", JSON.stringify(colorblindMode));
   }, [colorblindMode]);
@@ -632,7 +623,7 @@ const GameSandbox: FC = () => {
 
   // Timer Logic
   React.useEffect(() => {
-    if (status !== 'playing' || showSettings || showStats || zenMode || showTutorial || gameMode === 'speedrun' || isFrozen || showSplash) return;
+    if (status !== 'playing' || showSettings || showStats || showTutorial || gameMode === 'speedrun' || isFrozen || showSplash) return;
 
 
     const timer = setInterval(() => {
@@ -1218,33 +1209,8 @@ const GameSandbox: FC = () => {
             </h1>
             <p className={`text-sm font-bold uppercase tracking-widest mb-10 ${darkMode ? "text-slate-500" : "text-slate-400"}`}>Connect & Solve</p>
             
-            {/* Level Selector */}
-            <div className="flex items-center gap-4 mb-8 bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 shadow-lg">
-              <button 
-                onClick={() => setSplashLevel(l => Math.max(1, l - 1))}
-                className={`w-10 h-10 flex items-center justify-center rounded-lg font-bold text-xl transition-colors active:scale-90 ${darkMode ? "bg-slate-800 text-white hover:bg-slate-700" : "bg-white text-slate-800 hover:bg-stone-100"}`}
-              >
-                -
-              </button>
-              <div className="flex flex-col items-center w-24">
-                <span className={`text-[10px] font-bold uppercase tracking-wider ${darkMode ? "text-slate-400" : "text-slate-600"}`}>Start Level</span>
-                <span className={`text-2xl font-black ${darkMode ? "text-white" : "text-slate-800"}`}>{splashLevel}</span>
-              </div>
-              <button 
-                onClick={() => setSplashLevel(l => l + 1)}
-                className={`w-10 h-10 flex items-center justify-center rounded-lg font-bold text-xl transition-colors active:scale-90 ${darkMode ? "bg-slate-800 text-white hover:bg-slate-700" : "bg-white text-slate-800 hover:bg-stone-100"}`}
-              >
-                +
-              </button>
-            </div>
-
             <button onClick={() => { 
-              setStats((s: any) => {
-                const next = { ...s, gamesWon: splashLevel - 1 };
-                localStorage.setItem("crossing-sum-stats", JSON.stringify(next));
-                return next;
-              });
-              loadNewPuzzle("normal", splashLevel - 1);
+              loadNewPuzzle("normal");
               setShowSplash(false); 
               playSound("pop"); 
             }} className="group relative px-10 py-4 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full text-white text-xl font-black shadow-[0_10px_20px_-10px_rgba(245,158,11,0.5)] hover:shadow-[0_20px_30px_-10px_rgba(245,158,11,0.6)] hover:scale-110 transition-all duration-300 active:scale-95">
@@ -1381,15 +1347,6 @@ const GameSandbox: FC = () => {
                   className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${colorblindMode ? (darkMode ? 'bg-slate-200 text-slate-900' : 'bg-stone-800 text-white') : (darkMode ? 'bg-slate-800 text-slate-500' : 'bg-stone-100 text-stone-500')}`}
                 >
                   {colorblindMode ? "On" : "Off"}
-                </button>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className={`font-bold text-sm ${darkMode ? "text-slate-400" : "text-stone-600"}`}>Zen Mode</span>
-                <button
-                  onClick={() => setZenMode(!zenMode)}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${zenMode ? (darkMode ? 'bg-slate-200 text-slate-900' : 'bg-stone-800 text-white') : (darkMode ? 'bg-slate-800 text-slate-500' : 'bg-stone-100 text-stone-500')}`}
-                >
-                  {zenMode ? "On" : "Off"}
                 </button>
               </div>
               <div className="flex items-center justify-between">
@@ -1609,27 +1566,23 @@ const GameSandbox: FC = () => {
 
 
         <div className="text-right">
-          {!zenMode && (
-            <>
-              <div className={`text-[10px] font-bold uppercase tracking-wider ${darkMode ? "text-slate-400" : "text-stone-500"}`}>
-                Score
-              </div>
-              <div className={`text-2xl font-black leading-none ${darkMode ? "text-orange-400" : "text-orange-500"}`}>
-                {score}
-              </div>
-              {combo > 1 && (
-                <div className="text-xs font-bold text-orange-400 animate-pulse leading-none mt-1">
-                  🔥 {combo}x COMBO
-                </div>
-              )}
-            </>
+          <div className={`text-[10px] font-bold uppercase tracking-wider ${darkMode ? "text-slate-400" : "text-stone-500"}`}>
+            Score
+          </div>
+          <div className={`text-2xl font-black leading-none ${darkMode ? "text-orange-400" : "text-orange-500"}`}>
+            {score}
+          </div>
+          {combo > 1 && (
+            <div className="text-xs font-bold text-orange-400 animate-pulse leading-none mt-1">
+              🔥 {combo}x COMBO
+            </div>
           )}
         </div>
       </div>
 
 
       {/* TIMER BAR */}
-      {!zenMode && gameMode !== "speedrun" && (
+      {gameMode !== "speedrun" && (
         <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 relative overflow-hidden">
           <div
             className={`absolute top-0 left-0 h-full transition-all duration-1000 ease-linear ${isFrozen ? 'bg-blue-400 animate-pulse' : (timeLeft < 10 ? 'bg-red-500' : (darkMode ? 'bg-slate-500' : 'bg-stone-400'))}`}
@@ -1639,7 +1592,7 @@ const GameSandbox: FC = () => {
       )}
 
       {/* POWER-UPS BAR */}
-      {!zenMode && status === 'playing' && (
+      {status === 'playing' && (
         <div className="flex justify-center gap-4 py-2">
           <button onClick={activateFreeze} disabled={score < 100 || isFrozen} className={`flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold transition-all active:scale-95 ${score >= 100 ? (isFrozen ? "bg-blue-500 text-white ring-2 ring-blue-300" : "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/60 dark:text-blue-100") : "bg-stone-200 text-stone-400 dark:bg-slate-800 dark:text-slate-600"}`}>
             <span>❄️</span>
